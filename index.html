@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Zeitguthaben</title>
 <style>
@@ -10,7 +10,7 @@
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--card:#1c1c1e;--tx:#f2f2f7;--mut:#8e8e93;--line:#38383a;--acc:#7b88ff;--okbg:#12361d}}
 :root[data-theme="dark"]{--bg:#000;--card:#1c1c1e;--tx:#f2f2f7;--mut:#8e8e93;--line:#38383a;--acc:#7b88ff;--okbg:#12361d}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
 html,body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Rounded","Helvetica Neue",Arial,sans-serif}
 body{padding:16px;min-height:100vh}
 h1{font-size:28px;margin:4px 4px 14px}
@@ -23,11 +23,15 @@ th .ic{display:block;font-size:44px;line-height:1.1}
 .nm{font-size:20px;font-weight:700;text-align:left;padding-left:14px;position:sticky;left:0;background:var(--card)}
 .cell{width:84px;height:84px;margin:auto;border-radius:22px;border:3px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:30px;cursor:pointer;transition:transform .15s}
 .cell:active{transform:scale(.92)}
-.cell.p{border-color:var(--pend);animation:pulse 1.2s infinite}
+.cell.p{border-color:var(--mut);background:var(--bg)}
+.cell svg{width:48px;height:48px}
+.cell.p svg{color:var(--mut)}
+.cell.d svg{width:34px;height:34px;color:var(--ok)}
 .cell.d{border:3px solid var(--ok);background:var(--okbg);cursor:default}
-.cell b{font-size:17px;color:var(--ok)}
+.cell b{font-size:15px;color:var(--ok);line-height:1}
 .cell .q{font-size:30px;opacity:.35}
-@keyframes pulse{50%{transform:scale(1.06)}}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(52,199,89,.8);transform:scale(1.1)}100%{box-shadow:0 0 0 24px rgba(52,199,89,0);transform:scale(1)}}
+.cell.n{animation:glow .9s ease-out}
 .sum{font-size:26px;font-weight:800;color:var(--acc);white-space:nowrap}
 .sum small{display:block;font-size:12px;color:var(--mut);font-weight:600}
 #secret{position:fixed;right:0;bottom:0;width:90px;height:90px;opacity:0;border:0;background:transparent;z-index:5}
@@ -70,6 +74,8 @@ if(!S||!S.tasks){S={tasks:[{id:"t1",e:"🛏️",n:"Zimmer aufräumen",m:10},{id:
 if(S.day!==today()){S.done={fiete:{},hannes:{}};S.day=today();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+var NEW={};
+var FP='<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path opacity=".45" d="M8 19C11 11 17 7 24 7s13 4 16 12"/><path opacity=".6" d="M13 21c1-5 5-9 11-9s10 4 11 9v4c0 4 1 7 3 10"/><path opacity=".8" d="M18 39c1-3 2-6 2-10v-7a4 4 0 0 1 8 0v7c0 4 1 8 3 11"/><path d="M13 28v3c0 4-1 7-3 10"/><path d="M24 25v5c0 4-1 7-2 10"/></svg>';
 function sum(k){var t=0;S.tasks.forEach(function(x){if(S.done[k][x.id]===2)t+=x.m;});return t;}
 function render(){
   var h="<tr><th></th>";
@@ -79,11 +85,11 @@ function render(){
     h+="<tr><td class='nm'>"+k.n+"</td>";
     S.tasks.forEach(function(t){
       var st=S.done[k.id][t.id]||0;
-      h+="<td><div class='cell "+(st===2?"d":st===1?"p":"")+"' data-k='"+k.id+"' data-t='"+t.id+"'>"+
-        (st===2?"✅<b>+"+t.m+"</b>":"<span class='q'>"+esc(t.e)+"</span>")+"</div></td>";});
+      h+="<td><div class='cell "+(st===2?"d"+(NEW[k.id+t.id]?" n":""):st===1?"p":"")+"' data-k='"+k.id+"' data-t='"+t.id+"'>"+
+        (st===2?FP+"<b>+"+t.m+"</b>":st===1?FP:"<span class='q'>"+esc(t.e)+"</span>")+"</div></td>";});
     h+="<td class='sum'>"+sum(k.id)+"<small>Minuten</small></td></tr>";
   });
-  document.getElementById("tbl").innerHTML=h;
+  document.getElementById("tbl").innerHTML=h;NEW={};
 }
 document.getElementById("tbl").addEventListener("click",function(ev){
   var c=ev.target.closest(".cell");if(!c)return;
@@ -93,19 +99,28 @@ document.getElementById("tbl").addEventListener("click",function(ev){
   save();render();
 });
 function toast(){var e=document.getElementById("toast");e.classList.add("s");setTimeout(function(){e.classList.remove("s");},1600);}
-var taps=0,timer=null;
-document.getElementById("secret").addEventListener("click",function(){
-  taps++;clearTimeout(timer);
-  timer=setTimeout(function(){
-    var n=taps;taps=0;
-    if(n>=5){openAdmin();}
-    else if(n===3){
-      var any=false;
-      KIDS.forEach(function(k){S.tasks.forEach(function(t){if(S.done[k.id][t.id]===1){S.done[k.id][t.id]=2;any=true;}});});
-      if(any){save();render();toast();}
-    }
-  },700);
+var taps=0,timer=null,downAt=0,hold2=null,adminHit=false;
+function doConfirm(){
+  var any=false;
+  KIDS.forEach(function(k){S.tasks.forEach(function(t){if(S.done[k.id][t.id]===1){S.done[k.id][t.id]=2;NEW[k.id+t.id]=1;any=true;}});});
+  if(any){save();render();toast();}
+}
+var sec=document.getElementById("secret");
+sec.addEventListener("pointerdown",function(ev){
+  ev.preventDefault();downAt=Date.now();adminHit=false;clearTimeout(hold2);
+  hold2=setTimeout(function(){adminHit=true;taps=0;clearTimeout(timer);openAdmin();},3000);
 });
+sec.addEventListener("pointerup",function(){
+  clearTimeout(hold2);
+  if(!downAt)return;
+  var d=Date.now()-downAt;downAt=0;
+  if(adminHit)return;
+  if(d>=1500){taps=0;clearTimeout(timer);doConfirm();return;}
+  taps++;clearTimeout(timer);
+  timer=setTimeout(function(){var n=taps;taps=0;if(n>=5)openAdmin();else if(n===3)doConfirm();},700);
+});
+sec.addEventListener("pointercancel",function(){clearTimeout(hold2);downAt=0;});
+sec.addEventListener("contextmenu",function(e){e.preventDefault();});
 function openAdmin(){document.getElementById("main").style.display="none";document.getElementById("admin").style.display="block";renderAdmin();}
 function closeAdmin(){document.getElementById("admin").style.display="none";document.getElementById("main").style.display="block";render();}
 function renderAdmin(){
@@ -138,6 +153,8 @@ document.getElementById("reset").addEventListener("click",function(){
   if(confirm("Alle Häkchen von heute zurücksetzen?")){S.done={fiete:{},hannes:{}};save();renderAdmin();}
 });
 document.getElementById("back").addEventListener("click",closeAdmin);
+["gesturestart","gesturechange","gestureend"].forEach(function(n){document.addEventListener(n,function(e){e.preventDefault();});});
+var lastT=0;document.addEventListener("touchend",function(e){var now=Date.now();if(now-lastT<350&&!e.target.closest("input"))e.preventDefault();lastT=now;},{passive:false});
 render();
 </script>
 </body>
