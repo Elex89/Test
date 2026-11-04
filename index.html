@@ -1,178 +1,256 @@
 <!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>HSG Kamera</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
+<meta name="theme-color" content="#000000">
+<title>Blackcam</title>
 <style>
-  :root { --red:#d01818; --bg:#0b0b0c; --fg:#fff; }
-  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; overflow:hidden; }
-  body { display:flex; flex-direction:column; align-items:center;
-    padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px); }
-  header { padding:10px 16px 6px; font-size:13px; opacity:.75; text-align:center; }
-  .frame { position:relative; aspect-ratio:4/5; height:min(calc(100dvh - 190px), 125vw);
-    max-width:100vw; background:#222; overflow:hidden; border-radius:12px; }
-  video, #shot { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-  svg#ov { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
-  #shot { display:none; }
-  .controls { width:100%; max-width:480px; padding:12px 18px; display:flex; flex-direction:column; gap:10px; }
-  .row { display:flex; align-items:center; justify-content:space-between; gap:14px; }
-  button { font:inherit; color:var(--fg); background:#2a2a2d; border:0; border-radius:12px; padding:12px 16px; font-size:15px; }
-  button.primary { background:var(--red); font-weight:600; flex:1; }
-  #shutter { width:72px; height:72px; border-radius:50%; background:#fff; border:5px solid #555; padding:0; }
-  #shutter:active { background:#ddd; }
-  label { font-size:13px; opacity:.8; display:flex; align-items:center; gap:8px; flex:1; }
-  input[type=range] { flex:1; accent-color:var(--red); }
-  #info { font-size:12px; opacity:.7; text-align:center; min-height:16px; }
-  #msg { position:absolute; inset:0; display:none; align-items:center; justify-content:center; text-align:center;
-    padding:24px; font-size:15px; background:#111; }
-  .hide { display:none !important; }
-</style>
-</head>
-<body>
-<header>Alle Personen müssen im freien Bereich stehen – nicht unter den roten Flächen.</header>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;background:#000;color:#eee;font:16px -apple-system,system-ui,sans-serif;overflow:hidden;touch-action:manipulation;overscroll-behavior:none}
+#bg{position:fixed;inset:0;background:#000 center/cover no-repeat}
+#vid{position:fixed;top:0;left:0;width:2px;height:2px;opacity:.01;pointer-events:none;object-fit:cover}
+#vid.pv{top:calc(env(safe-area-inset-top) + 12px);left:auto;right:12px;width:34vw;height:calc(34vw*4/3);opacity:1;border-radius:14px;border:1px solid #333;background:#000;z-index:2}
+#dot{position:fixed;top:calc(env(safe-area-inset-top) + 20px);right:20px;width:12px;height:12px;border-radius:50%;background:#f33;z-index:3;display:none}
+#start{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#444;z-index:5;background:#000;text-align:center;padding:30px}
+#hl{position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:.02;overflow:hidden}
+#menu{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:10;display:none;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 20px) 18px calc(env(safe-area-inset-bottom) + 20px)}
+#menu.on{display:block}
+h2{font-weight:600;margin:6px 0 18px}
+.btn{display:block;width:100%;padding:16px;margin:0 0 12px;border:0;border-radius:14px;background:#1c1c1e;color:#fff;font-size:17px;text-align:left}
+.btn.s{display:inline-block;width:auto;padding:10px 14px;margin:0 8px 0 0;font-size:15px;text-align:center}
+.btn.act{background:#2f5bff}
+.btn.red{color:#ff5a52}
+.row{display:flex;justify-content:space-between;align-items:center;background:#1c1c1e;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.card{background:#1c1c1e;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.sub{color:#8e8e93;font-size:13px;margin-top:6px;line-height:1.4}
+.sw{appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:16px;background:#39393d;position:relative;outline:0;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;transition:.2s}
+.sw:checked{background:#34c759}.sw:checked::after{left:22px}
+.it{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#player{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+#player video{flex:1;min-height:0;width:100%}
+#player button{margin:12px;padding:14px;border:0;border-radius:12px;background:#1c1c1e;color:#fff;font-size:17px}
+</style></head><body>
+<div id="bg"></div>
+<video id="vid" playsinline muted autoplay></video>
+<div id="dot"></div>
+<label id="hl"><input type="checkbox" switch id="hsw"></label>
+<div id="start">Zum Starten einmal tippen</div>
 
-<div class="frame">
-  <video id="cam" autoplay playsinline muted></video>
-  <img id="shot" alt="Aufgenommenes Foto">
-  <svg id="ov" viewBox="0 0 1080 1350" preserveAspectRatio="none" aria-hidden="true">
-    <g id="layout"></g>
-  </svg>
-  <div id="msg"></div>
+<div id="menu">
+ <div id="v-main">
+  <h2>Menü</h2>
+  <button class="btn" data-go="set">⚙️ Einstellungen</button>
+  <button class="btn" data-go="gal">🎞️ Galerie</button>
+  <button class="btn" id="close">Schließen</button>
+ </div>
+ <div id="v-set" hidden>
+  <h2>Einstellungen</h2>
+  <div class="row"><span>Vorschaufenster einblenden</span><input type="checkbox" class="sw" id="s-prev"></div>
+  <div class="card"><div>Kamera</div><div style="margin-top:10px">
+   <button class="btn s" data-cam="ultra">Ultraweit</button><button class="btn s" data-cam="wide">Weit</button><button class="btn s" data-cam="tele">Tele</button></div>
+   <div class="sub" id="cam-info"></div></div>
+  <div class="card"><div>Hintergrund</div><div class="sub" style="margin:2px 0 10px">Bild statt schwarzem Bildschirm</div>
+   <button class="btn s" id="bg-pick">Bild wählen</button><button class="btn s red" id="bg-del">Entfernen</button>
+   <input type="file" id="bg-file" accept="image/*" hidden></div>
+  <div class="row"><span>Signalton bei Start/Stopp</span><input type="checkbox" class="sw" id="s-tone"></div>
+  <div class="card sub">Start/Stopp: Zwei-Finger-Tipp oder Play/Pause per AirPods, Kopfhörer-Fernbedienung oder Sperrbildschirm. Vier Tipps öffnen dieses Menü.</div>
+  <button class="btn" data-go="main">‹ Zurück</button>
+ </div>
+ <div id="v-gal" hidden>
+  <h2>Galerie</h2>
+  <div id="list"></div>
+  <button class="btn" data-go="main">‹ Zurück</button>
+ </div>
 </div>
-
-<div class="controls">
-  <div id="liveCtl">
-    <div class="row" style="margin-bottom:12px">
-      <label>Layout <input type="range" id="op" min="0" max="100" value="70"></label>
-      <button id="toggle">Aus</button>
-      <button id="flip">⟲ Kamera</button>
-    </div>
-    <div class="row" style="justify-content:center">
-      <button id="shutter" aria-label="Foto aufnehmen"></button>
-    </div>
-  </div>
-  <div id="resCtl" class="row hide">
-    <button id="again">Neu aufnehmen</button>
-    <button id="save" class="primary">Speichern / Teilen</button>
-  </div>
-  <div id="info"></div>
-</div>
-
-<canvas id="cv" class="hide"></canvas>
+<div id="player"><video id="pvid" controls playsinline></video><button id="pclose">Schließen</button></div>
 
 <script>
-(function(){
-  var $ = function(id){ return document.getElementById(id); };
-  var cam=$('cam'), shot=$('shot'), msg=$('msg'), info=$('info'), layout=$('layout');
-  var facing='environment', stream=null, lastBlob=null, lastURL=null, overlayOn=true;
+(()=>{
+const $=s=>document.querySelector(s);
+const vid=$('#vid'),menu=$('#menu'),dot=$('#dot');
+let S=Object.assign({preview:false,cam:'wide',tone:false},JSON.parse(localStorage.getItem('bc')||'{}'));
+const save=()=>localStorage.setItem('bc',JSON.stringify(S));
+let stream=null,rec=null,chunks=[],t0=0,recording=false,cams={ultra:null,wide:null,tele:null},vids=[],bgUrl=null,wake=null,audio=null,ctx=null;
 
-  // ---- Layout als SVG nachbauen (Koordinaten der 1080x1350-Vorlage) ----
-  var s='';
-  // Große „HSG“-Buchstaben (rosa)
-  s+='<g fill="#e8999a" fill-opacity=".8">'
-   +'<rect x="225" y="715" width="78" height="365"/><rect x="341" y="715" width="78" height="365"/>'
-   +'<rect x="225" y="715" width="194" height="143" fill-opacity="0"/>'
-   +'<rect x="432" y="712" width="190" height="368" rx="80"/><rect x="634" y="712" width="196" height="368" rx="80"/></g>';
-  // Spielstand-Boxen
-  s+='<rect x="217" y="906" width="424" height="151" fill="#fff" fill-opacity=".75"/>'
-   +'<rect x="641" y="906" width="208" height="151" fill="#797170" fill-opacity=".9"/>'
-   +'<rect x="217" y="1080" width="424" height="202" fill="#fff" fill-opacity=".75"/>'
-   +'<rect x="641" y="1080" width="208" height="202" fill="#d01818" fill-opacity=".9"/>';
-  s+='<text x="429" y="1002" font-family="Impact,Arial Narrow,sans-serif" font-weight="800" font-size="56" text-anchor="middle" fill="#000">SG TEUTO HANDBALL</text>';
-  s+='<text x="745" y="1012" font-family="Impact,Arial Narrow,sans-serif" font-weight="800" font-size="96" text-anchor="middle" fill="#fff">16</text>';
-  s+='<text x="745" y="1226" font-family="Impact,Arial Narrow,sans-serif" font-weight="800" font-size="96" text-anchor="middle" fill="#fff">28</text>';
-  s+='<rect x="389" y="1112" width="106" height="144" fill="#d01818"/>'
-   +'<text x="442" y="1235" font-family="Arial" font-weight="900" font-style="italic" font-size="42" text-anchor="middle" fill="#fff">HSG</text>';
-  // Jahreszahl & Liga
-  s+='<g font-family="Impact,Arial Narrow,sans-serif" font-weight="800" font-size="104" fill="#d01818" text-anchor="middle">'
-   +'<text x="989" y="325">20</text><text x="989" y="412">27</text></g>';
-  s+='<text x="64" y="82" font-family="Arial,sans-serif" font-weight="700" font-size="30" fill="#fff" stroke="#000" stroke-opacity=".5" stroke-width="1.5">REGIONSOBERLIGA</text>';
-  // Punkte unten links
-  var d='';
-  for(var gy=930,r=0; gy<1360; gy+=52,r++){
-    for(var gx=(r%2?20:46); gx<880; gx+=52){
-      var dist=Math.hypot(gx-330, gy-1420), rad=30*(1-dist/640);
-      if(rad>2.5) d+='<circle cx="'+gx+'" cy="'+gy+'" r="'+rad.toFixed(1)+'"/>';
-    }
+/* ---------- DB ---------- */
+const dbP=new Promise((res,rej)=>{const r=indexedDB.open('blackcam',1);r.onupgradeneeded=()=>{r.result.createObjectStore('videos',{keyPath:'id'});r.result.createObjectStore('kv')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const req=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const store=async(n,m='readonly')=>(await dbP).transaction(n,m).objectStore(n);
+const dbAll=async()=>req((await store('videos')).getAll());
+const dbPut=async(s,v,k)=>req((await store(s,'readwrite')).put(v,k));
+const dbDel=async(s,k)=>req((await store(s,'readwrite')).delete(k));
+const dbGet=async(s,k)=>req((await store(s)).get(k));
+
+/* ---------- Feedback ---------- */
+function buzz(n){
+  try{navigator.vibrate&&navigator.vibrate(n>1?[50,70,50]:50)}catch(e){}
+  for(let i=0;i<n;i++)setTimeout(()=>$('#hl').click(),i*130); // iOS-Haptik über switch-Checkbox
+  if(S.tone)beep(n);
+}
+function beep(n){
+  try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();
+  for(let i=0;i<n;i++){const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=n>1?660:880;g.gain.value=.08;o.connect(g);g.connect(ctx.destination);const t=ctx.currentTime+i*.15;o.start(t);o.stop(t+.08)}}catch(e){}
+}
+
+/* ---------- Kamera ---------- */
+async function listCams(){
+  const d=(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='videoinput');
+  cams={ultra:null,wide:null,tele:null};
+  for(const x of d){
+    const l=x.label.toLowerCase();
+    if(/front|vorder|user|selfie|desk|schreibtisch/.test(l))continue;
+    if(/ultra/.test(l))cams.ultra=x.deviceId;
+    else if(/tele/.test(l))cams.tele=x.deviceId;
+    else if(!cams.wide)cams.wide=x.deviceId;
   }
-  s+='<g fill="#d01818" fill-opacity=".9">'+d+'</g>';
-  layout.innerHTML=s;
+}
+async function startCam(){
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  let id=cams[S.cam];if(!id&&S.cam!=='wide'){S.cam='wide';id=cams.wide;save()}
+  const v={width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30}};
+  if(id)v.deviceId={exact:id};else v.facingMode={ideal:'environment'};
+  stream=await navigator.mediaDevices.getUserMedia({video:v,audio:true});
+  stream.getVideoTracks()[0].onended=()=>{if(recording)stopRec()};
+  vid.srcObject=stream;vid.play().catch(()=>{});
+}
+async function initCam(){
+  const tmp=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:true});
+  await listCams();tmp.getTracks().forEach(t=>t.stop());
+  await startCam();
+}
 
-  // ---- Bedienung Overlay ----
-  $('op').oninput=function(){ layout.style.opacity=this.value/100; };
-  layout.style.opacity=.7;
-  $('toggle').onclick=function(){
-    overlayOn=!overlayOn; layout.style.display=overlayOn?'':'none';
-    this.textContent=overlayOn?'Aus':'An';
+/* ---------- Aufnahme ---------- */
+const pickMime=()=>['video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
+function startRec(){
+  if(recording||!stream)return;
+  chunks=[];const mt=pickMime();
+  try{rec=new MediaRecorder(stream,mt?{mimeType:mt,videoBitsPerSecond:10e6}:{})}catch(e){rec=new MediaRecorder(stream)}
+  const r=rec;
+  r.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  r.onstop=async()=>{
+    const type=r.mimeType||mt||'video/mp4',blob=new Blob(chunks,{type});
+    if(blob.size)await dbPut('videos',{id:Date.now(),dur:(Date.now()-t0)/1000,size:blob.size,type,blob});
+    chunks=[];if(!menu.classList.contains('on')===false)renderGal();
   };
+  r.start(1000);t0=Date.now();recording=true;dot.style.display=S.preview?'block':'none';
+  buzz(1);
+}
+function stopRec(){
+  if(!recording)return;
+  recording=false;dot.style.display='none';
+  try{rec.stop()}catch(e){}
+  buzz(2);
+}
+const toggleRec=()=>recording?stopRec():startRec();
 
-  // ---- Kamera ----
-  function showMsg(t){ msg.style.display='flex'; msg.textContent=t; }
-  function stop(){ if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; } }
-  async function start(){
-    stop(); msg.style.display='none';
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-      showMsg('Kamerazugriff nicht möglich. Bitte die Seite über https:// öffnen (z. B. auf deiner Website) und in Safari/Chrome nutzen.'); return;
-    }
-    var tries=[
-      {video:{facingMode:{ideal:facing},width:{ideal:4096},height:{ideal:4096}},audio:false},
-      {video:{facingMode:{ideal:facing}},audio:false},
-      {video:true,audio:false}
-    ];
-    for(var i=0;i<tries.length;i++){
-      try{ stream=await navigator.mediaDevices.getUserMedia(tries[i]); break; }catch(e){ stream=null; }
-    }
-    if(!stream){ showMsg('Kein Kamerazugriff. Bitte die Berechtigung für die Kamera erlauben und die Seite neu laden.'); return; }
-    cam.srcObject=stream;
-    cam.onloadedmetadata=function(){ info.textContent='Kamera: '+cam.videoWidth+' × '+cam.videoHeight+' px'; };
+/* ---------- Medientasten (Safari erlaubt keine Lautstärketasten) ---------- */
+function silentWav(){
+  const n=8000,b=new DataView(new ArrayBuffer(44+n));
+  const w=(o,s)=>[...s].forEach((c,i)=>b.setUint8(o+i,c.charCodeAt(0)));
+  w(0,'RIFF');b.setUint32(4,36+n,true);w(8,'WAVEfmt ');b.setUint32(16,16,true);b.setUint16(20,1,true);b.setUint16(22,1,true);
+  b.setUint32(24,8000,true);b.setUint32(28,8000,true);b.setUint16(32,1,true);b.setUint16(34,8,true);w(36,'data');b.setUint32(40,n,true);
+  for(let i=0;i<n;i++)b.setUint8(44+i,128);
+  return URL.createObjectURL(new Blob([b.buffer],{type:'audio/wav'}));
+}
+function initMedia(){
+  audio=new Audio(silentWav());audio.loop=true;audio.volume=.01;audio.play().catch(()=>{});
+  if(!('mediaSession' in navigator))return;
+  try{navigator.mediaSession.metadata=new MediaMetadata({title:'Aufnahme Start/Stopp',artist:'Blackcam'})}catch(e){}
+  const h=()=>{toggleRec();audio&&audio.play().catch(()=>{});try{navigator.mediaSession.playbackState='playing'}catch(e){}};
+  ['play','pause','stop','nexttrack','previoustrack'].forEach(a=>{try{navigator.mediaSession.setActionHandler(a,h)}catch(e){}});
+  try{navigator.mediaSession.playbackState='playing'}catch(e){}
+}
+async function wakeLock(){try{if('wakeLock' in navigator&&!wake)wake=await navigator.wakeLock.request('screen');wake&&wake.addEventListener('release',()=>wake=null)}catch(e){}}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){if(recording)stopRec()}
+  else{wakeLock();if(stream&&stream.getVideoTracks()[0].readyState==='ended')startCam().catch(()=>{});audio&&audio.play().catch(()=>{})}
+});
+
+/* ---------- Touch: 4x tippen = Menü, 2 Finger = Start/Stopp ---------- */
+let taps=[];
+document.addEventListener('touchstart',e=>{
+  if($('#start').style.display==='none'&&!menu.classList.contains('on')&&$('#player').style.display!=='flex'){
+    if(e.touches.length>=2){taps=[];toggleRec();return}
+    const n=Date.now();taps=taps.filter(t=>n-t<1800);taps.push(n);
+    if(taps.length>=4){taps=[];openMenu('main')}
   }
-  $('flip').onclick=function(){ facing=facing==='environment'?'user':'environment'; start(); };
+},{passive:true});
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('contextmenu',e=>e.preventDefault());
 
-  // ---- Aufnehmen (ohne Layout, 4:5 zugeschnitten, volle Auflösung) ----
-  $('shutter').onclick=function(){
-    var vw=cam.videoWidth, vh=cam.videoHeight; if(!vw||!vh) return;
-    var ratio=4/5, sx=0, sy=0, sw=vw, sh=vh;
-    if(vw/vh>ratio){ sw=Math.round(vh*ratio); sx=Math.round((vw-sw)/2); }
-    else { sh=Math.round(vw/ratio); sy=Math.round((vh-sh)/2); }
-    var cv=$('cv'); cv.width=sw; cv.height=sh;
-    cv.getContext('2d').drawImage(cam,sx,sy,sw,sh,0,0,sw,sh);
-    cv.toBlob(function(b){
-      if(!b){ info.textContent='Aufnahme fehlgeschlagen.'; return; }
-      lastBlob=b; if(lastURL) URL.revokeObjectURL(lastURL);
-      lastURL=URL.createObjectURL(b); shot.src=lastURL;
-      shot.style.display='block'; cam.style.display='none'; $('ov').style.display='none';
-      $('liveCtl').classList.add('hide'); $('resCtl').classList.remove('hide');
-      info.textContent='Gespeichert wird ohne Layout: '+sw+' × '+sh+' px ('+(b.size/1048576).toFixed(1)+' MB)';
-    },'image/jpeg',0.97);
-  };
+$('#start').addEventListener('click',async()=>{
+  const el=$('#start');el.textContent='…';
+  try{await initCam();initMedia();wakeLock();el.style.display='none';applyUI()}
+  catch(e){el.textContent='Kamera/Mikrofon-Zugriff nicht möglich: '+(e.message||e)+' — Seite neu laden und erlauben.'}
+});
 
-  $('again').onclick=function(){
-    shot.style.display='none'; cam.style.display='block'; $('ov').style.display='block';
-    $('resCtl').classList.add('hide'); $('liveCtl').classList.remove('hide');
-    info.textContent='Kamera: '+cam.videoWidth+' × '+cam.videoHeight+' px';
-  };
+/* ---------- Menü ---------- */
+function openMenu(v){menu.classList.add('on');show(v)}
+function show(v){['main','set','gal'].forEach(k=>$('#v-'+k).hidden=k!==v);if(v==='gal')renderGal();if(v==='set')renderSet();menu.scrollTop=0}
+menu.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)show(b.dataset.go)});
+$('#close').onclick=()=>menu.classList.remove('on');
 
-  $('save').onclick=async function(){
-    if(!lastBlob) return;
-    var d=new Date(), p=function(n){return String(n).padStart(2,'0');};
-    var name='HSG_'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+'.jpg';
-    var file=new File([lastBlob],name,{type:'image/jpeg'});
+/* ---------- Einstellungen ---------- */
+function applyUI(){vid.classList.toggle('pv',S.preview);dot.style.display=S.preview&&recording?'block':'none'}
+function renderSet(){
+  $('#s-prev').checked=S.preview;$('#s-tone').checked=S.tone;
+  document.querySelectorAll('[data-cam]').forEach(b=>{const k=b.dataset.cam;b.classList.toggle('act',S.cam===k);b.style.opacity=cams[k]||k==='wide'?1:.35});
+  const miss=['ultra','tele'].filter(k=>!cams[k]).map(k=>k==='ultra'?'Ultraweit':'Tele');
+  $('#cam-info').textContent=(recording?'Während der Aufnahme nicht änderbar. ':'')+(miss.length?'Nicht gefunden: '+miss.join(', ')+'.':'');
+}
+$('#s-prev').onchange=e=>{S.preview=e.target.checked;save();applyUI()};
+$('#s-tone').onchange=e=>{S.tone=e.target.checked;save();if(S.tone)beep(1)};
+document.querySelectorAll('[data-cam]').forEach(b=>b.onclick=async()=>{
+  const k=b.dataset.cam;if(recording||(!cams[k]&&k!=='wide'))return;
+  S.cam=k;save();renderSet();try{await startCam()}catch(e){$('#cam-info').textContent='Fehler: '+e.message}
+});
+async function loadBg(){
+  const b=await dbGet('kv','bg');if(bgUrl)URL.revokeObjectURL(bgUrl);bgUrl=null;
+  $('#bg').style.backgroundImage=b?`url(${bgUrl=URL.createObjectURL(b)})`:'none';
+}
+$('#bg-pick').onclick=()=>$('#bg-file').click();
+$('#bg-file').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  const bmp=await createImageBitmap(f),sc=Math.min(1,1800/Math.max(bmp.width,bmp.height));
+  const c=document.createElement('canvas');c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);
+  c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));
+  await dbPut('kv',blob,'bg');await loadBg();e.target.value='';
+};
+$('#bg-del').onclick=async()=>{await dbDel('kv','bg');loadBg()};
+
+/* ---------- Galerie ---------- */
+const fmtT=s=>Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0');
+async function renderGal(){
+  vids=(await dbAll()).sort((a,b)=>b.id-a.id);
+  const L=$('#list');
+  if(!vids.length){L.innerHTML='<div class="card sub">Noch keine Videos.</div>';return}
+  L.innerHTML=vids.map(v=>`<div class="card"><div>${new Date(v.id).toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'medium'})}</div>
+  <div class="sub">${fmtT(v.dur)} min · ${(v.size/1048576).toFixed(1)} MB</div>
+  <div style="margin-top:10px"><button class="btn s" data-a="play" data-id="${v.id}">▶︎ Abspielen</button><button class="btn s" data-a="exp" data-id="${v.id}">Export</button><button class="btn s red" data-a="del" data-id="${v.id}">Löschen</button></div></div>`).join('');
+}
+$('#list').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;
+  const v=vids.find(x=>x.id==b.dataset.id);if(!v)return;
+  if(b.dataset.a==='play'){
+    const p=$('#pvid');p.src=URL.createObjectURL(v.blob);$('#player').style.display='flex';p.play().catch(()=>{});
+  }else if(b.dataset.a==='exp'){
+    const ext=/mp4/.test(v.type)?'mp4':'webm';
+    const f=new File([v.blob],'Video_'+new Date(v.id).toISOString().slice(0,19).replace(/[:T]/g,'-')+'.'+ext,{type:v.type});
     try{
-      if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); return; }
-    }catch(e){ if(e&&e.name==='AbortError') return; }
-    var a=document.createElement('a'); a.href=lastURL; a.download=name;
-    document.body.appendChild(a); a.click(); a.remove();
-  };
+      if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f]});
+      else{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}
+    }catch(err){}
+  }else if(confirm('Video wirklich löschen?')){
+    await dbDel('videos',v.id);renderGal();
+  }
+});
+$('#pclose').onclick=()=>{const p=$('#pvid');p.pause();URL.revokeObjectURL(p.src);p.removeAttribute('src');p.load();$('#player').style.display='none'};
 
-  document.addEventListener('visibilitychange',function(){
-    if(document.hidden) stop(); else if(shot.style.display!=='block') start();
-  });
-  start();
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+loadBg();
 })();
-</script>
-</body>
-</html>
+</script></body></html>
