@@ -5,38 +5,46 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
 <meta name="theme-color" content="#000000">
-<title>Bl4ckcam</title>
+<title>Blackcam</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{margin:0;height:100%;background:#000;color:#eee;font:16px -apple-system,system-ui,sans-serif;overflow:hidden;touch-action:manipulation;overscroll-behavior:none}
 #bg{position:fixed;inset:0;background:#000 center/cover no-repeat}
 #vid{position:fixed;top:0;left:0;width:2px;height:2px;opacity:.01;pointer-events:none;object-fit:cover}
-#vid.pv{top:calc(env(safe-area-inset-top) + 12px);left:auto;right:12px;width:34vw;height:calc(34vw*4/3);opacity:1;border-radius:14px;border:1px solid #333;background:#000;z-index:2}
+#vid.pv{top:calc(env(safe-area-inset-top) + 12px);left:auto;right:12px;width:34vw;height:calc(34vw*4/3);opacity:var(--pvop,1);border-radius:14px;background:#000;z-index:2}
+#vid.mir{transform:scaleX(-1)}
 #dot{position:fixed;top:calc(env(safe-area-inset-top) + 20px);right:20px;width:12px;height:12px;border-radius:50%;background:#f33;z-index:3;display:none}
+#hint{position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom) + 10px);color:#5a5a5a;font-size:13px;opacity:0;transition:opacity .4s;z-index:4;pointer-events:none}
 #start{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#444;z-index:5;background:#000;text-align:center;padding:30px}
-#hl{position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:.02;overflow:hidden}
+#hl{position:fixed;left:0;bottom:0;width:48px;height:48px;opacity:.01;pointer-events:none;z-index:-1}
 #menu{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:10;display:none;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 20px) 18px calc(env(safe-area-inset-bottom) + 20px)}
 #menu.on{display:block}
 h2{font-weight:600;margin:6px 0 18px}
 .btn{display:block;width:100%;padding:16px;margin:0 0 12px;border:0;border-radius:14px;background:#1c1c1e;color:#fff;font-size:17px;text-align:left}
-.btn.s{display:inline-block;width:auto;padding:10px 14px;margin:0 8px 0 0;font-size:15px;text-align:center}
-.btn.act{background:#2f5bff}
-.btn.red{color:#ff5a52}
-.row{display:flex;justify-content:space-between;align-items:center;background:#1c1c1e;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.btn.s{display:inline-block;width:auto;padding:10px 14px;margin:0 8px 8px 0;font-size:15px;text-align:center}
+.btn.act{background:#2f5bff}.btn.red{color:#ff5a52}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#1c1c1e;border-radius:14px;padding:14px 16px;margin-bottom:12px}
 .card{background:#1c1c1e;border-radius:14px;padding:14px 16px;margin-bottom:12px}
 .sub{color:#8e8e93;font-size:13px;margin-top:6px;line-height:1.4}
 .sw{appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:16px;background:#39393d;position:relative;outline:0;flex:none}
 .sw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;transition:.2s}
 .sw:checked{background:#34c759}.sw:checked::after{left:22px}
-.it{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-#player{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-#player video{flex:1;min-height:0;width:100%}
-#player button{margin:12px;padding:14px;border:0;border-radius:12px;background:#1c1c1e;color:#fff;font-size:17px}
+input[type=range]{width:100%;margin-top:10px}
+#grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:14px}
+.th{position:relative;aspect-ratio:3/4;background:#1c1c1e;overflow:hidden}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+.th span{position:absolute;right:5px;bottom:4px;font-size:12px;color:#fff;text-shadow:0 0 4px #000}
+#viewer{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+#vbar{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;gap:8px}
+#vbar button{border:0;border-radius:10px;background:#1c1c1e;color:#fff;font-size:15px;padding:9px 13px}
+#vtrack{flex:1;min-height:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.sl{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;height:100%}
+.sl video{width:100%;height:100%;object-fit:contain;background:#000}
 </style></head><body>
 <div id="bg"></div>
 <video id="vid" playsinline muted autoplay></video>
-<div id="dot"></div>
-<label id="hl"><input type="checkbox" switch id="hsw"></label>
+<div id="dot"></div><div id="hint"></div>
+<label id="hl" for="hsw"><input type="checkbox" switch id="hsw"></label>
 <div id="start">Zum Starten einmal tippen</div>
 
 <div id="menu">
@@ -48,34 +56,43 @@ h2{font-weight:600;margin:6px 0 18px}
  </div>
  <div id="v-set" hidden>
   <h2>Einstellungen</h2>
-  <div class="row"><span>Vorschaufenster einblenden</span><input type="checkbox" class="sw" id="s-prev"></div>
+  <div class="card"><div>Vorschaufenster</div>
+   <div class="row" style="margin:10px 0 0;padding:0;background:none"><span>Einblenden</span><input type="checkbox" class="sw" id="s-prev"></div>
+   <div class="sub" style="margin-top:14px">Transparenz: <span id="op-v"></span></div><input type="range" id="s-op" min="10" max="100" step="5"></div>
   <div class="card"><div>Kamera</div><div style="margin-top:10px">
-   <button class="btn s" data-cam="ultra">Ultraweit</button><button class="btn s" data-cam="wide">Weit</button><button class="btn s" data-cam="tele">Tele</button></div>
+   <button class="btn s" data-cam="ultra">Ultraweit</button><button class="btn s" data-cam="wide">Weit</button><button class="btn s" data-cam="tele">Tele</button><button class="btn s" data-cam="front">Front</button></div>
    <div class="sub" id="cam-info"></div></div>
+  <div class="card"><div>Videoqualität</div><div style="margin-top:10px">
+   <button class="btn s" data-res="720">720p</button><button class="btn s" data-res="1080">1080p</button><button class="btn s" data-res="2160">4K</button></div><div>
+   <button class="btn s" data-fps="24">24 fps</button><button class="btn s" data-fps="30">30 fps</button><button class="btn s" data-fps="60">60 fps</button></div>
+   <div class="sub" id="q-info"></div><div class="sub">Höhere Werte brauchen mehr Speicher. Nicht jede Kamera schafft 4K/60; dann nimmt iOS den nächstmöglichen Wert (siehe „Aktuell“).</div></div>
   <div class="card"><div>Hintergrund</div><div class="sub" style="margin:2px 0 10px">Bild statt schwarzem Bildschirm</div>
    <button class="btn s" id="bg-pick">Bild wählen</button><button class="btn s red" id="bg-del">Entfernen</button>
    <input type="file" id="bg-file" accept="image/*" hidden></div>
-  <div class="row"><span>Signalton bei Start/Stopp</span><input type="checkbox" class="sw" id="s-tone"></div>
-  <div class="card sub">Start/Stopp: Zwei-Finger-Tipp oder Play/Pause per AirPods, Kopfhörer-Fernbedienung oder Sperrbildschirm. Vier Tipps öffnen dieses Menü.</div>
+  <div class="row"><span>Haptik bei Start/Stopp</span><input type="checkbox" class="sw" id="s-hap"></div>
+  <button class="btn s" id="hap-test" style="margin-bottom:12px">Haptik testen</button>
+  <div class="card"><div class="row" style="margin:0;padding:0;background:none"><span>Hinweistext „Video gestartet/beendet“</span><input type="checkbox" class="sw" id="s-hint"></div>
+   <div class="sub" style="margin-top:14px">Anzeigedauer: <span id="ht-v"></span></div><input type="range" id="s-ht" min="1" max="10" step="0.5"></div>
+  <div class="row"><span>Signalton</span><input type="checkbox" class="sw" id="s-tone"></div>
+  <div class="card sub">Doppeltipp: Aufnahme starten/stoppen. Vier schnelle Tipps: Menü. Auch Play/Pause von AirPods oder Sperrbildschirm startet/stoppt (ohne Haptik). Haptik braucht iOS 17.4+ und aktivierte Systemhaptik.</div>
   <button class="btn" data-go="main">‹ Zurück</button>
  </div>
  <div id="v-gal" hidden>
-  <h2>Galerie</h2>
-  <div id="list"></div>
+  <h2>Galerie</h2><div id="list"></div>
   <button class="btn" data-go="main">‹ Zurück</button>
  </div>
 </div>
-<div id="player"><video id="pvid" controls playsinline></video><button id="pclose">Schließen</button></div>
+<div id="viewer"><div id="vbar"><button id="vx">‹ Zurück</button><span id="vcount" class="sub"></span><span><button id="vexp">Export</button> <button id="vdel" style="color:#ff5a52">Löschen</button></span></div><div id="vtrack"></div></div>
 
 <script>
 (()=>{
 const $=s=>document.querySelector(s);
 const vid=$('#vid'),menu=$('#menu'),dot=$('#dot');
-let S=Object.assign({preview:false,cam:'wide',tone:false},JSON.parse(localStorage.getItem('bc')||'{}'));
+let S=Object.assign({preview:false,cam:'wide',tone:false,haptic:true,hint:true,pvop:100,res:1080,fps:30,hintT:2.2},JSON.parse(localStorage.getItem('bc')||'{}'));
 const save=()=>localStorage.setItem('bc',JSON.stringify(S));
-let stream=null,rec=null,chunks=[],t0=0,recording=false,cams={ultra:null,wide:null,tele:null},vids=[],bgUrl=null,wake=null,audio=null,ctx=null;
+let stream=null,rec=null,chunks=[],t0=0,recording=false,cams={},vids=[],bgUrl=null,wake=null,audio=null,ctx=null,ready=false,thUrls=[],vUrls=[],cur=0;
 
-/* ---------- DB ---------- */
+/* DB */
 const dbP=new Promise((res,rej)=>{const r=indexedDB.open('blackcam',1);r.onupgradeneeded=()=>{r.result.createObjectStore('videos',{keyPath:'id'});r.result.createObjectStore('kv')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const req=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const store=async(n,m='readonly')=>(await dbP).transaction(n,m).objectStore(n);
@@ -84,24 +101,26 @@ const dbPut=async(s,v,k)=>req((await store(s,'readwrite')).put(v,k));
 const dbDel=async(s,k)=>req((await store(s,'readwrite')).delete(k));
 const dbGet=async(s,k)=>req((await store(s)).get(k));
 
-/* ---------- Feedback ---------- */
+/* Feedback */
+const pulse=()=>{try{$('#hl').click()}catch(e){}};
 function buzz(n){
-  try{navigator.vibrate&&navigator.vibrate(n>1?[50,70,50]:50)}catch(e){}
-  for(let i=0;i<n;i++)setTimeout(()=>$('#hl').click(),i*130); // iOS-Haptik über switch-Checkbox
+  if(S.haptic){try{navigator.vibrate&&navigator.vibrate(n>1?[50,70,50]:50)}catch(e){}pulse();if(n>1)setTimeout(pulse,110)}
   if(S.tone)beep(n);
 }
 function beep(n){
   try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();
   for(let i=0;i<n;i++){const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=n>1?660:880;g.gain.value=.08;o.connect(g);g.connect(ctx.destination);const t=ctx.currentTime+i*.15;o.start(t);o.stop(t+.08)}}catch(e){}
 }
+let ht;function hint(m){if(!S.hint)return;const h=$('#hint');h.textContent=m;h.style.opacity=1;clearTimeout(ht);ht=setTimeout(()=>h.style.opacity=0,S.hintT*1000)}
 
-/* ---------- Kamera ---------- */
+/* Kamera */
 async function listCams(){
   const d=(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='videoinput');
-  cams={ultra:null,wide:null,tele:null};
+  cams={ultra:null,wide:null,tele:null,front:null};
   for(const x of d){
     const l=x.label.toLowerCase();
-    if(/front|vorder|user|selfie|desk|schreibtisch/.test(l))continue;
+    if(/desk|schreibtisch/.test(l))continue;
+    if(/front|vorder|user|selfie/.test(l)){cams.front=cams.front||x.deviceId;continue}
     if(/ultra/.test(l))cams.ultra=x.deviceId;
     else if(/tele/.test(l))cams.tele=x.deviceId;
     else if(!cams.wide)cams.wide=x.deviceId;
@@ -109,47 +128,58 @@ async function listCams(){
 }
 async function startCam(){
   if(stream)stream.getTracks().forEach(t=>t.stop());
-  let id=cams[S.cam];if(!id&&S.cam!=='wide'){S.cam='wide';id=cams.wide;save()}
-  const v={width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30}};
-  if(id)v.deviceId={exact:id};else v.facingMode={ideal:'environment'};
+  let id=cams[S.cam];if(!id&&S.cam!=='wide'&&S.cam!=='front'){S.cam='wide';id=cams.wide;save()}
+  const R={720:[1280,720],1080:[1920,1080],2160:[3840,2160]}[S.res]||[1920,1080];const v={width:{ideal:R[0]},height:{ideal:R[1]},frameRate:{ideal:S.fps}};
+  if(id)v.deviceId={exact:id};else v.facingMode={ideal:S.cam==='front'?'user':'environment'};
   stream=await navigator.mediaDevices.getUserMedia({video:v,audio:true});
   stream.getVideoTracks()[0].onended=()=>{if(recording)stopRec()};
-  vid.srcObject=stream;vid.play().catch(()=>{});
+  vid.srcObject=stream;vid.classList.toggle('mir',S.cam==='front');vid.play().catch(()=>{});
 }
 async function initCam(){
   const tmp=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:true});
-  await listCams();tmp.getTracks().forEach(t=>t.stop());
-  await startCam();
+  await listCams();tmp.getTracks().forEach(t=>t.stop());await startCam();
 }
 
-/* ---------- Aufnahme ---------- */
+/* Thumbnails */
+function makeThumb(blob){return new Promise(res=>{
+  const v=document.createElement('video'),u=URL.createObjectURL(blob);let done=false;
+  v.muted=true;v.playsInline=true;v.preload='auto';
+  const fin=b=>{if(done)return;done=true;URL.revokeObjectURL(u);res(b)};
+  setTimeout(()=>fin(null),6000);v.onerror=()=>fin(null);
+  v.onloadeddata=()=>{try{v.currentTime=Math.min(.3,(v.duration||1)/2)}catch(e){fin(null)}};
+  v.onseeked=()=>{const w=320,h=Math.round(w*(v.videoHeight/v.videoWidth))||240,c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(v,0,0,w,h);c.toBlob(b=>fin(b),'image/jpeg',.8)};
+  v.src=u;v.load();
+})}
+
+/* Aufnahme */
+const bitrate=()=>({720:6e6,1080:10e6,2160:25e6}[S.res]||10e6)*(S.fps>30?1.5:1);
 const pickMime=()=>['video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
 function startRec(){
   if(recording||!stream)return;
   chunks=[];const mt=pickMime();
-  try{rec=new MediaRecorder(stream,mt?{mimeType:mt,videoBitsPerSecond:10e6}:{})}catch(e){rec=new MediaRecorder(stream)}
+  try{rec=new MediaRecorder(stream,mt?{mimeType:mt,videoBitsPerSecond:bitrate()}:{})}catch(e){rec=new MediaRecorder(stream)}
   const r=rec;
   r.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
   r.onstop=async()=>{
-    const type=r.mimeType||mt||'video/mp4',blob=new Blob(chunks,{type});
-    if(blob.size)await dbPut('videos',{id:Date.now(),dur:(Date.now()-t0)/1000,size:blob.size,type,blob});
-    chunks=[];if(!menu.classList.contains('on')===false)renderGal();
+    const type=r.mimeType||mt||'video/mp4',blob=new Blob(chunks,{type});chunks=[];
+    if(!blob.size)return;
+    const o={id:Date.now(),dur:(Date.now()-t0)/1000,size:blob.size,type,blob};
+    await dbPut('videos',o);
+    o.thumb=await makeThumb(blob);if(o.thumb)await dbPut('videos',o);
+    if(menu.classList.contains('on')&&!$('#v-gal').hidden)renderGal();
   };
-  r.start(1000);t0=Date.now();recording=true;dot.style.display=S.preview?'block':'none';
-  buzz(1);
+  r.start(1000);t0=Date.now();recording=true;applyUI();buzz(1);hint('Video gestartet');
 }
 function stopRec(){
   if(!recording)return;
-  recording=false;dot.style.display='none';
-  try{rec.stop()}catch(e){}
-  buzz(2);
+  recording=false;applyUI();try{rec.stop()}catch(e){}
+  buzz(2);hint('Video beendet');
 }
 const toggleRec=()=>recording?stopRec():startRec();
 
-/* ---------- Medientasten (Safari erlaubt keine Lautstärketasten) ---------- */
+/* Medientasten */
 function silentWav(){
-  const n=8000,b=new DataView(new ArrayBuffer(44+n));
-  const w=(o,s)=>[...s].forEach((c,i)=>b.setUint8(o+i,c.charCodeAt(0)));
+  const n=8000,b=new DataView(new ArrayBuffer(44+n)),w=(o,s)=>[...s].forEach((c,i)=>b.setUint8(o+i,c.charCodeAt(0)));
   w(0,'RIFF');b.setUint32(4,36+n,true);w(8,'WAVEfmt ');b.setUint32(16,16,true);b.setUint16(20,1,true);b.setUint16(22,1,true);
   b.setUint32(24,8000,true);b.setUint32(28,8000,true);b.setUint16(32,1,true);b.setUint16(34,8,true);w(36,'data');b.setUint32(40,n,true);
   for(let i=0;i<n;i++)b.setUint8(44+i,128);
@@ -163,48 +193,64 @@ function initMedia(){
   ['play','pause','stop','nexttrack','previoustrack'].forEach(a=>{try{navigator.mediaSession.setActionHandler(a,h)}catch(e){}});
   try{navigator.mediaSession.playbackState='playing'}catch(e){}
 }
-async function wakeLock(){try{if('wakeLock' in navigator&&!wake)wake=await navigator.wakeLock.request('screen');wake&&wake.addEventListener('release',()=>wake=null)}catch(e){}}
+async function wakeLock(){try{if('wakeLock' in navigator&&!wake){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>wake=null)}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){if(recording)stopRec()}
   else{wakeLock();if(stream&&stream.getVideoTracks()[0].readyState==='ended')startCam().catch(()=>{});audio&&audio.play().catch(()=>{})}
 });
 
-/* ---------- Touch: 4x tippen = Menü, 2 Finger = Start/Stopp ---------- */
-let taps=[];
-document.addEventListener('touchstart',e=>{
-  if($('#start').style.display==='none'&&!menu.classList.contains('on')&&$('#player').style.display!=='flex'){
-    if(e.touches.length>=2){taps=[];toggleRec();return}
-    const n=Date.now();taps=taps.filter(t=>n-t<1800);taps.push(n);
-    if(taps.length>=4){taps=[];openMenu('main')}
-  }
+/* Tippen: 2x = Start/Stopp, 4x = Menü (touchend = echte Nutzergeste, nötig für Haptik) */
+let taps=0,tmr=null;
+const viewerOpen=()=>$('#viewer').style.display==='flex';
+document.addEventListener('touchend',e=>{
+  if(!ready||menu.classList.contains('on')||viewerOpen()||e.touches.length)return;
+  taps++;clearTimeout(tmr);
+  tmr=setTimeout(()=>{const n=taps;taps=0;if(n===2)toggleRec();else if(n>=4)openMenu('main')},420);
 },{passive:true});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('contextmenu',e=>e.preventDefault());
-
 $('#start').addEventListener('click',async()=>{
   const el=$('#start');el.textContent='…';
-  try{await initCam();initMedia();wakeLock();el.style.display='none';applyUI()}
+  try{await initCam();initMedia();wakeLock();el.style.display='none';ready=true;applyUI()}
   catch(e){el.textContent='Kamera/Mikrofon-Zugriff nicht möglich: '+(e.message||e)+' — Seite neu laden und erlauben.'}
 });
 
-/* ---------- Menü ---------- */
+/* Menü */
 function openMenu(v){menu.classList.add('on');show(v)}
 function show(v){['main','set','gal'].forEach(k=>$('#v-'+k).hidden=k!==v);if(v==='gal')renderGal();if(v==='set')renderSet();menu.scrollTop=0}
 menu.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)show(b.dataset.go)});
 $('#close').onclick=()=>menu.classList.remove('on');
 
-/* ---------- Einstellungen ---------- */
-function applyUI(){vid.classList.toggle('pv',S.preview);dot.style.display=S.preview&&recording?'block':'none'}
+/* Einstellungen */
+function applyUI(){
+  vid.classList.toggle('pv',S.preview);vid.style.setProperty('--pvop',S.pvop/100);
+  dot.style.display=S.preview&&recording?'block':'none';
+}
 function renderSet(){
-  $('#s-prev').checked=S.preview;$('#s-tone').checked=S.tone;
-  document.querySelectorAll('[data-cam]').forEach(b=>{const k=b.dataset.cam;b.classList.toggle('act',S.cam===k);b.style.opacity=cams[k]||k==='wide'?1:.35});
-  const miss=['ultra','tele'].filter(k=>!cams[k]).map(k=>k==='ultra'?'Ultraweit':'Tele');
+  $('#s-prev').checked=S.preview;$('#s-tone').checked=S.tone;$('#s-hap').checked=S.haptic;$('#s-hint').checked=S.hint;
+  $('#s-op').value=S.pvop;$('#op-v').textContent=S.pvop+' %';
+  document.querySelectorAll('[data-cam]').forEach(b=>{const k=b.dataset.cam;b.classList.toggle('act',S.cam===k);b.style.opacity=(cams[k]||k==='wide'||k==='front')?1:.35});
+  document.querySelectorAll('[data-res]').forEach(b=>b.classList.toggle('act',+b.dataset.res===S.res));
+  document.querySelectorAll('[data-fps]').forEach(b=>b.classList.toggle('act',+b.dataset.fps===S.fps));
+  $('#s-ht').value=S.hintT;$('#ht-v').textContent=S.hintT+' s';
+  const ts=stream&&stream.getVideoTracks()[0].getSettings();
+  $('#q-info').textContent=(recording?'Während der Aufnahme nicht änderbar. ':'')+(ts?`Aktuell: ${ts.width}×${ts.height}, ${Math.round(ts.frameRate||0)} fps`:'');
+  const miss=['ultra','tele','front'].filter(k=>!cams[k]).map(k=>({ultra:'Ultraweit',tele:'Tele',front:'Front'})[k]);
   $('#cam-info').textContent=(recording?'Während der Aufnahme nicht änderbar. ':'')+(miss.length?'Nicht gefunden: '+miss.join(', ')+'.':'');
 }
 $('#s-prev').onchange=e=>{S.preview=e.target.checked;save();applyUI()};
+$('#s-op').oninput=e=>{S.pvop=+e.target.value;$('#op-v').textContent=S.pvop+' %';save();applyUI()};
 $('#s-tone').onchange=e=>{S.tone=e.target.checked;save();if(S.tone)beep(1)};
+$('#s-hap').onchange=e=>{S.haptic=e.target.checked;save();if(S.haptic)pulse()};
+$('#s-hint').onchange=e=>{S.hint=e.target.checked;save();hint('Video gestartet')};
+$('#hap-test').onclick=()=>{try{navigator.vibrate&&navigator.vibrate(50)}catch(e){}pulse();setTimeout(pulse,110)};
+document.querySelectorAll('[data-res],[data-fps]').forEach(b=>b.onclick=async()=>{
+  if(recording)return;if(b.dataset.res)S.res=+b.dataset.res;else S.fps=+b.dataset.fps;save();
+  try{await startCam()}catch(e){}renderSet()});
+$('#s-ht').oninput=e=>{S.hintT=+e.target.value;$('#ht-v').textContent=S.hintT+' s';save()};
+$('#s-ht').onchange=()=>hint('Video gestartet');
 document.querySelectorAll('[data-cam]').forEach(b=>b.onclick=async()=>{
-  const k=b.dataset.cam;if(recording||(!cams[k]&&k!=='wide'))return;
+  const k=b.dataset.cam;if(recording||(!cams[k]&&k!=='wide'&&k!=='front'))return;
   S.cam=k;save();renderSet();try{await startCam()}catch(e){$('#cam-info').textContent='Fehler: '+e.message}
 });
 async function loadBg(){
@@ -214,43 +260,59 @@ async function loadBg(){
 $('#bg-pick').onclick=()=>$('#bg-file').click();
 $('#bg-file').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
-  const bmp=await createImageBitmap(f),sc=Math.min(1,1800/Math.max(bmp.width,bmp.height));
-  const c=document.createElement('canvas');c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);
-  c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
-  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));
-  await dbPut('kv',blob,'bg');await loadBg();e.target.value='';
+  const bmp=await createImageBitmap(f),sc=Math.min(1,1800/Math.max(bmp.width,bmp.height)),c=document.createElement('canvas');
+  c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+  await dbPut('kv',await new Promise(r=>c.toBlob(r,'image/jpeg',.88)),'bg');await loadBg();e.target.value='';
 };
 $('#bg-del').onclick=async()=>{await dbDel('kv','bg');loadBg()};
 
-/* ---------- Galerie ---------- */
+/* Galerie */
 const fmtT=s=>Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0');
+const mkU=(b,arr)=>{const u=URL.createObjectURL(b);arr.push(u);return u};
+let gtok=0;
 async function renderGal(){
+  const tok=++gtok;
   vids=(await dbAll()).sort((a,b)=>b.id-a.id);
+  thUrls.forEach(URL.revokeObjectURL);thUrls=[];
   const L=$('#list');
   if(!vids.length){L.innerHTML='<div class="card sub">Noch keine Videos.</div>';return}
-  L.innerHTML=vids.map(v=>`<div class="card"><div>${new Date(v.id).toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'medium'})}</div>
-  <div class="sub">${fmtT(v.dur)} min · ${(v.size/1048576).toFixed(1)} MB</div>
-  <div style="margin-top:10px"><button class="btn s" data-a="play" data-id="${v.id}">▶︎ Abspielen</button><button class="btn s" data-a="exp" data-id="${v.id}">Export</button><button class="btn s red" data-a="del" data-id="${v.id}">Löschen</button></div></div>`).join('');
-}
-$('#list').addEventListener('click',async e=>{
-  const b=e.target.closest('[data-a]');if(!b)return;
-  const v=vids.find(x=>x.id==b.dataset.id);if(!v)return;
-  if(b.dataset.a==='play'){
-    const p=$('#pvid');p.src=URL.createObjectURL(v.blob);$('#player').style.display='flex';p.play().catch(()=>{});
-  }else if(b.dataset.a==='exp'){
-    const ext=/mp4/.test(v.type)?'mp4':'webm';
-    const f=new File([v.blob],'Video_'+new Date(v.id).toISOString().slice(0,19).replace(/[:T]/g,'-')+'.'+ext,{type:v.type});
-    try{
-      if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f]});
-      else{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}
-    }catch(err){}
-  }else if(confirm('Video wirklich löschen?')){
-    await dbDel('videos',v.id);renderGal();
+  L.innerHTML='<div id="grid">'+vids.map((v,i)=>`<div class="th" data-i="${i}">${v.thumb?`<img src="${mkU(v.thumb,thUrls)}">`:''}<span>${fmtT(v.dur)}</span></div>`).join('')+'</div>';
+  for(let i=0;i<vids.length;i++){
+    const v=vids[i];if(v.thumb)continue;
+    const t=await makeThumb(v.blob);if(tok!==gtok)return;
+    if(t){v.thumb=t;await dbPut('videos',v);const d=document.querySelector(`.th[data-i="${i}"]`);if(d){const im=new Image();im.src=mkU(t,thUrls);d.prepend(im)}}
   }
-});
-$('#pclose').onclick=()=>{const p=$('#pvid');p.pause();URL.revokeObjectURL(p.src);p.removeAttribute('src');p.load();$('#player').style.display='none'};
+}
+$('#list').addEventListener('click',e=>{const t=e.target.closest('.th');if(t)openViewer(+t.dataset.i)});
+
+/* Viewer mit Wischen */
+function openViewer(i){
+  const t=$('#vtrack');t.innerHTML='';vUrls.forEach(URL.revokeObjectURL);vUrls=[];
+  vids.forEach(v=>{const s=document.createElement('div'),vd=document.createElement('video');s.className='sl';vd.controls=true;vd.playsInline=true;vd.preload='metadata';if(v.thumb)vd.poster=mkU(v.thumb,vUrls);s.append(vd);t.append(s)});
+  $('#viewer').style.display='flex';t.scrollLeft=i*t.clientWidth;activate(i,true);
+}
+function activate(i,play){
+  cur=i;const sl=[...$('#vtrack').children];
+  sl.forEach((s,k)=>{const vd=s.firstChild;
+    if(k===i){if(!vd.getAttribute('src'))vd.src=mkU(vids[k].blob,vUrls);if(play)vd.play().catch(()=>{})}
+    else{if(!vd.paused)vd.pause();if(Math.abs(k-i)>1&&vd.getAttribute('src')){vd.removeAttribute('src');vd.load()}}});
+  $('#vcount').textContent=(i+1)+' / '+vids.length;
+}
+let st;$('#vtrack').addEventListener('scroll',()=>{clearTimeout(st);st=setTimeout(()=>{const t=$('#vtrack'),i=Math.round(t.scrollLeft/t.clientWidth);if(i!==cur&&i>=0&&i<vids.length)activate(i,false)},100)},{passive:true});
+function closeViewer(){$('#vtrack').querySelectorAll('video').forEach(v=>{v.pause();v.removeAttribute('src');v.load()});$('#vtrack').innerHTML='';vUrls.forEach(URL.revokeObjectURL);vUrls=[];$('#viewer').style.display='none';renderGal()}
+$('#vx').onclick=closeViewer;
+$('#vexp').onclick=async()=>{
+  const v=vids[cur];if(!v)return;const ext=/mp4/.test(v.type)?'mp4':'webm';
+  const f=new File([v.blob],'Video_'+new Date(v.id).toISOString().slice(0,19).replace(/[:T]/g,'-')+'.'+ext,{type:v.type});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f]});else{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}}catch(err){}
+};
+$('#vdel').onclick=async()=>{
+  const v=vids[cur];if(!v||!confirm('Video wirklich löschen?'))return;
+  await dbDel('videos',v.id);vids.splice(cur,1);
+  if(!vids.length)closeViewer();else openViewer(Math.min(cur,vids.length-1));
+};
 
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-loadBg();
+loadBg();applyUI();
 })();
 </script></body></html>
