@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000000">
 <title>Blackcam</title>
 <style>
@@ -131,7 +131,8 @@ async function startCam(){
   let id=cams[S.cam];if(!id&&S.cam!=='wide'&&S.cam!=='front'){S.cam='wide';id=cams.wide;save()}
   const R={720:[1280,720],1080:[1920,1080],2160:[3840,2160]}[S.res]||[1920,1080];const v={width:{ideal:R[0]},height:{ideal:R[1]},frameRate:{ideal:S.fps}};
   if(id)v.deviceId={exact:id};else v.facingMode={ideal:S.cam==='front'?'user':'environment'};
-  stream=await navigator.mediaDevices.getUserMedia({video:v,audio:true});
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{...v,frameRate:{exact:S.fps}}})}
+  catch(e){stream=await navigator.mediaDevices.getUserMedia({video:v})}
   stream.getVideoTracks()[0].onended=()=>{if(recording)stopRec()};
   vid.srcObject=stream;vid.classList.toggle('mir',S.cam==='front');vid.play().catch(()=>{});
 }
@@ -154,10 +155,14 @@ function makeThumb(blob){return new Promise(res=>{
 /* Aufnahme */
 const bitrate=()=>({720:6e6,1080:10e6,2160:25e6}[S.res]||10e6)*(S.fps>30?1.5:1);
 const pickMime=()=>['video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
-function startRec(){
-  if(recording||!stream)return;
+let micS=null,starting=false;
+async function startRec(){
+  if(recording||starting||!stream)return;starting=true;
+  buzz(1);hint('Video gestartet'); // Haptik VOR dem Mikrofon: iOS unterdrückt sie, solange das Mikrofon offen ist
+  try{micS=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){micS=null}
+  const ms=new MediaStream([...stream.getVideoTracks(),...(micS?micS.getAudioTracks():[])]);
   chunks=[];const mt=pickMime();
-  try{rec=new MediaRecorder(stream,mt?{mimeType:mt,videoBitsPerSecond:bitrate()}:{})}catch(e){rec=new MediaRecorder(stream)}
+  try{rec=new MediaRecorder(ms,mt?{mimeType:mt,videoBitsPerSecond:bitrate()}:{})}catch(e){rec=new MediaRecorder(ms)}
   const r=rec;
   r.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
   r.onstop=async()=>{
@@ -168,12 +173,13 @@ function startRec(){
     o.thumb=await makeThumb(blob);if(o.thumb)await dbPut('videos',o);
     if(menu.classList.contains('on')&&!$('#v-gal').hidden)renderGal();
   };
-  r.start(1000);t0=Date.now();recording=true;applyUI();buzz(1);hint('Video gestartet');
+  r.start(1000);t0=Date.now();recording=true;starting=false;applyUI();
 }
 function stopRec(){
   if(!recording)return;
   recording=false;applyUI();try{rec.stop()}catch(e){}
-  buzz(2);hint('Video beendet');
+  if(micS){micS.getTracks().forEach(t=>t.stop());micS=null}
+  hint('Video beendet');setTimeout(()=>buzz(2),250); // Mikrofon ist zu → Haptik wieder erlaubt
 }
 const toggleRec=()=>recording?stopRec():startRec();
 
